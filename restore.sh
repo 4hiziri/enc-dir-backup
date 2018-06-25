@@ -18,6 +18,10 @@ then
     mkdir -p $output
 fi
 
+stty -echo
+read -p "Password for $keyfile: " pass
+stty echo
+
 for key in $(ls $input | grep '\.key')
 do
     enc_file="${input%/}/${key%.key}.tar.gz.enc"
@@ -26,7 +30,7 @@ do
 
     temp=$(mktemp)
     
-    openssl rsautl -decrypt -inkey $keyfile < $key > $temp # dec key
+    openssl rsautl -decrypt -passin pass:$pass -inkey $keyfile < $key > $temp # dec key
     openssl enc -d $enc_alg -kfile $temp < $enc_file > $out_file # dec data
     tar xzf $out_file -C $output
     rm -f $out_file
