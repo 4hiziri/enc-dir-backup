@@ -18,15 +18,20 @@ fi
 
 shift 2
 
+# input password for keyfile
+stty -echo
+read -p "Password for $keyfile: " pass
+stty echo
+
 while [ $# != 0 ]
 do
     temp=$(mktemp)
     apg -a 1 -n 10 -m"$keylen" -x"$keylen" | shuf -n 1 > $temp # make password for each data
+
+    cat $temp | openssl rsautl -encrypt -inkey $keyfile -out "${output%/}/$(basename $1).key" -passin pass:$pass
     
     tar cz "$1" | openssl enc -e $enc_alg -out "${output%/}/$(basename $1).tar.gz.enc" -kfile $temp
-    
-    cat $temp | openssl rsautl -encrypt -inkey $keyfile -out "${output%/}/$(basename $1).key"    
+        
     shred -uzn 10 $temp
-    
     shift
 done
